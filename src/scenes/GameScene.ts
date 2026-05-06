@@ -8,6 +8,7 @@ import { InputSystem } from '../systems/Input';
 import { AIController } from '../systems/AI';
 import { Difficulty } from './TitleScene';
 import { ITEM_DEFS, ItemId, WorldItem, randomItem } from '../systems/Items';
+import { TouchControls } from '../systems/TouchControls';
 
 interface GameSceneData {
   difficulty: Difficulty;
@@ -22,6 +23,7 @@ const GOAL_INSET = 20;
 
 export class GameScene extends Phaser.Scene {
   private inputSys!: InputSystem;
+  private touch!: TouchControls;
   private leftPlayer!: Player;
   private rightPlayer!: Player;
   private discusList: Discus[] = [];
@@ -92,6 +94,7 @@ export class GameScene extends Phaser.Scene {
     this.particles.setDepth(5);
 
     this.inputSys = new InputSystem(this);
+    this.touch = new TouchControls(this, FIELD_W, FIELD_H);
     this.leftPlayer = new Player(this, 'left', LEFT_HOME, FIELD_H / 2);
     this.rightPlayer = new Player(this, 'right', RIGHT_HOME, FIELD_H / 2);
     this.ai = new AIController(this.difficulty, FIELD_H);
@@ -141,7 +144,8 @@ export class GameScene extends Phaser.Scene {
 
     if (this.matchOver) return;
 
-    const leftInput = this.inputSys.read(this.leftPlayer.isMirrored(now));
+    const kb = this.inputSys.read(this.leftPlayer.isMirrored(now));
+    const tc = this.touch.read();
     const aiDecision = this.ai.decide(
       dt,
       now,
@@ -152,13 +156,25 @@ export class GameScene extends Phaser.Scene {
       this.inventoryRight.length,
     );
 
-    this.leftPlayer.applyMovement(dt, leftInput.vx, leftInput.vy, leftInput.boost, FIELD_H);
+    let vx = kb.vx;
+    let vy = kb.vy;
+    if (tc.desiredY !== null) {
+      const dy = tc.desiredY - this.leftPlayer.y;
+      vy = Phaser.Math.Clamp(dy / 18, -1, 1);
+    }
+    const boost = kb.boost || tc.boost;
+    const catchDown = kb.catchOrThrowDown || tc.catchDown;
+    const catchHeld = kb.catchOrThrowHeld || tc.catchHeld;
+    const catchReleased = kb.catchOrThrowReleased || tc.catchReleased;
+    const useItem = (kb.useItem || tc.useItem) as 0 | 1 | 2 | 3;
+
+    this.leftPlayer.applyMovement(dt, vx, vy, boost, FIELD_H);
     this.rightPlayer.applyMovement(dt, aiDecision.vx, aiDecision.vy, aiDecision.boost, FIELD_H);
 
-    this.handleCatchAndThrow(this.leftPlayer, leftInput.catchOrThrowDown, leftInput.catchOrThrowHeld, leftInput.catchOrThrowReleased, dt);
+    this.handleCatchAndThrow(this.leftPlayer, catchDown, catchHeld, catchReleased, dt);
     this.handleCatchAndThrow(this.rightPlayer, aiDecision.catchDown, aiDecision.catchHeld, aiDecision.catchReleased, dt);
 
-    if (leftInput.useItem > 0) this.useItem('left', leftInput.useItem as 1 | 2 | 3);
+    if (useItem > 0) this.useItem('left', useItem as 1 | 2 | 3);
     if (aiDecision.useItemSlot > 0) this.useItem('right', aiDecision.useItemSlot as 1 | 2 | 3);
 
     for (const d of this.discusList) {
