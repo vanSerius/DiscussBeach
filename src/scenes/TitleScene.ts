@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../main';
+import { GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { HEX, COLORS } from '../utils/Colors';
 import { drawSynthwaveBackground } from '../visuals/Background';
 

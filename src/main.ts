@@ -4,9 +4,7 @@ import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
 import { ResultScene } from './scenes/ResultScene';
 import { COLORS } from './utils/Colors';
-
-export const GAME_WIDTH = 1280;
-export const GAME_HEIGHT = 720;
+import { GAME_HEIGHT, GAME_WIDTH } from './config';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,

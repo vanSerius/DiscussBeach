@@ -157,8 +157,8 @@ export class TouchControls {
 
     const container = this.scene.add.container(x, y, [g, text]).setDepth(60).setAlpha(0.85);
 
-    const hit = this.scene.add.zone(x, y, radius * 2, radius * 2).setOrigin(0.5).setCircleDropZone(radius);
-    hit.setInteractive(new Phaser.Geom.Circle(radius, radius, radius), Phaser.Geom.Circle.Contains);
+    const hit = this.scene.add.zone(x, y, radius * 2, radius * 2).setOrigin(0.5);
+    hit.setInteractive();
     hit.setDepth(61);
 
     hit.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
